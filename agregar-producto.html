@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Agregar productos y fotos · KuraFit</title>
+  <link rel="icon" href="img/logo.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <section class="page-head">
+    <div class="container">
+      <span class="eyebrow">Herramienta para ti</span>
+      <h1>Agregar productos y fotos</h1>
+      <p class="text-muted-k mb-0">Elige tus fotos, llena los datos y te preparo todo para pegar en tu sitio. Esta página no aparece en el menú.</p>
+    </div>
+  </section>
+
+  <section class="section pt-5">
+    <div class="container">
+      <div class="row g-4">
+
+        <!-- FORMULARIO -->
+        <div class="col-lg-5">
+          <div class="contact-card">
+            <h4 class="mb-3">1. Cuéntame qué agregar</h4>
+
+            <label class="form-label fw-bold" for="modo">¿Qué quieres hacer?</label>
+            <select id="modo" class="form-select mb-3">
+              <option value="nuevo">Agregar un producto nuevo</option>
+              <option value="foto">Agregar fotos a un producto que ya existe</option>
+            </select>
+
+            <div id="boxExistente" class="mb-3 d-none">
+              <label class="form-label fw-bold" for="prodExistente">Producto</label>
+              <select id="prodExistente" class="form-select"></select>
+            </div>
+
+            <div id="boxNuevo">
+              <div class="mb-3">
+                <label class="form-label fw-bold" for="nombre">Nombre del producto</label>
+                <input id="nombre" class="form-control" placeholder="Ej: Power Shot unidad 60 ml">
+              </div>
+              <div class="row g-3 mb-3">
+                <div class="col-7">
+                  <label class="form-label fw-bold" for="cat">Categoría</label>
+                  <input id="cat" class="form-control" list="cats" placeholder="Ej: Power Shot">
+                  <datalist id="cats"></datalist>
+                </div>
+                <div class="col-5">
+                  <label class="form-label fw-bold" for="precio">Precio (S/)</label>
+                  <input id="precio" type="number" step="0.10" min="0" class="form-control" placeholder="0.00">
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold" for="desc">Descripción</label>
+                <textarea id="desc" rows="3" class="form-control" placeholder="Cuenta qué es y qué lo hace especial"></textarea>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-bold" for="fotos">Fotos (puedes elegir varias)</label>
+              <input id="fotos" type="file" accept="image/*" multiple class="form-control">
+              <div class="form-text">La primera será la portada. Las reduzco a un tamaño ideal para que la página cargue rápido.</div>
+            </div>
+
+            <button id="generar" class="btn btn-kura w-100"><i class="bi bi-magic me-1"></i>Preparar fotos y código</button>
+          </div>
+        </div>
+
+        <!-- RESULTADO -->
+        <div class="col-lg-7">
+          <div id="vacio" class="drop-note text-muted-k">
+            <h5 class="text-verde"><i class="bi bi-info-circle me-2"></i>Cómo funciona</h5>
+            <ol class="mb-0 ps-3">
+              <li>Llena el formulario y elige tus fotos.</li>
+              <li>Descarga las fotos ya preparadas y guárdalas en la carpeta <strong>img/productos</strong> de tu sitio.</li>
+              <li>Copia el código que te muestro y pégalo en <strong>js/products.js</strong>.</li>
+              <li>Si tu sitio ya está en internet, vuelve a subir la carpeta <strong>img</strong> y el archivo <strong>products.js</strong>.</li>
+            </ol>
+          </div>
+
+          <div id="resultado" class="d-none">
+            <div class="contact-card mb-3">
+              <h4 class="mb-3">2. Descarga tus fotos</h4>
+              <p class="text-muted-k small">Guárdalas dentro de la carpeta <strong>img/productos</strong> con estos mismos nombres.</p>
+              <div id="listaFotos" class="d-grid gap-2 mb-3"></div>
+              <button id="todas" class="btn btn-verde btn-sm"><i class="bi bi-download me-1"></i>Descargar todas</button>
+            </div>
+            <div class="contact-card">
+              <h4 class="mb-2">3. Pega este código</h4>
+              <p id="instruccion" class="text-muted-k small"></p>
+              <pre id="codigo" class="code-box mb-3"></pre>
+              <button id="copiar" class="btn btn-kura btn-sm"><i class="bi bi-clipboard me-1"></i>Copiar código</button>
+              <span id="copiado" class="ms-2 small text-verde d-none">¡Copiado!</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div id="site-footer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/products.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const $ = id => document.getElementById(id);
+      const slug = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "producto";
+      const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+      $("cats").innerHTML = [...new Set(PRODUCTOS.map(p => p.cat))].map(c => `<option value="${esc(c)}">`).join("");
+      $("prodExistente").innerHTML = PRODUCTOS.map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join("");
+
+      $("modo").addEventListener("change", () => {
+        const nuevo = $("modo").value === "nuevo";
+        $("boxNuevo").classList.toggle("d-none", !nuevo);
+        $("boxExistente").classList.toggle("d-none", nuevo);
+      });
+
+      async function reducir(file, max = 1400) {
+        const bmp = await createImageBitmap(file);
+        const s = Math.min(1, max / Math.max(bmp.width, bmp.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+        const x = c.getContext("2d");
+        x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
+        x.drawImage(bmp, 0, 0, c.width, c.height);
+        return new Promise(r => c.toBlob(r, "image/jpeg", 0.85));
+      }
+
+      $("generar").addEventListener("click", async () => {
+        const nuevo = $("modo").value === "nuevo";
+        const files = [...$("fotos").files];
+        let base, start = 1, prod = null;
+
+        if (nuevo) {
+          const nombre = $("nombre").value.trim();
+          if (!nombre) { alert("Escribe el nombre del producto."); return; }
+          base = slug(nombre);
+        } else {
+          prod = PRODUCTOS.find(p => p.id == $("prodExistente").value);
+          if (!files.length) { alert("Elige al menos una foto."); return; }
+          base = slug(prod.nombre);
+          start = getImgs(prod).length + 1;
+        }
+
+        const btn = $("generar");
+        btn.disabled = true; btn.textContent = "Preparando…";
+
+        const nombres = [], links = [];
+        try {
+          for (let i = 0; i < files.length; i++) {
+            const nombre = `${base}-${start + i}.jpg`;
+            const blob = await reducir(files[i]);
+            const url = URL.createObjectURL(blob);
+            nombres.push(nombre);
+            links.push(`<div class="d-flex align-items-center gap-3">
+              <img src="${url}" class="thumb-mini" alt="">
+              <a class="btn btn-sm btn-kura-outline flex-grow-1 text-start" href="${url}" download="${nombre}"><i class="bi bi-download me-1"></i>${nombre}</a></div>`);
+          }
+        } catch (e) {
+          alert("No pude leer alguna de las fotos. Prueba con archivos JPG o PNG.");
+          btn.disabled = false; btn.innerHTML = '<i class="bi bi-magic me-1"></i>Preparar fotos y código';
+          return;
+        }
+
+        const rutas = nombres.map(n => `"img/productos/${n}"`).join(", ");
+        let codigo, instruccion;
+
+        if (nuevo) {
+          const nextId = Math.max(...PRODUCTOS.map(p => p.id)) + 1;
+          const precio = (parseFloat($("precio").value) || 0).toFixed(2);
+          codigo = `  { id: ${nextId}, nombre: ${JSON.stringify($("nombre").value.trim())}, cat: ${JSON.stringify($("cat").value.trim() || "Otros")}, precio: ${precio},\n` +
+                   `    desc: ${JSON.stringify($("desc").value.trim())},\n` +
+                   `    icono: "bi-bag-heart-fill", imgs: [${rutas}], destacado: false },`;
+          instruccion = "Abre js/products.js, ubica la lista PRODUCTOS y pega esto justo antes del último ] (después de la última coma).";
+        } else {
+          codigo = `, ${rutas}`;
+          instruccion = `Abre js/products.js, busca el producto «${prod.nombre}» y, dentro de sus imgs: [ … ], pega esto después de la última foto (antes del cierre ]).`;
+        }
+
+        $("listaFotos").innerHTML = links.join("") || '<p class="mb-0 text-muted-k">No elegiste fotos: solo necesitas el código.</p>';
+        $("todas").classList.toggle("d-none", !links.length);
+        $("instruccion").textContent = instruccion;
+        $("codigo").textContent = codigo;
+        $("vacio").classList.add("d-none");
+        $("resultado").classList.remove("d-none");
+        btn.disabled = false; btn.innerHTML = '<i class="bi bi-magic me-1"></i>Preparar fotos y código';
+        $("resultado").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      $("todas").addEventListener("click", () => {
+        [...$("listaFotos").querySelectorAll("a[download]")].forEach((a, i) => setTimeout(() => a.click(), i * 400));
+      });
+
+      $("copiar").addEventListener("click", async () => {
+        const t = $("codigo").textContent;
+        try { await navigator.clipboard.writeText(t); }
+        catch { const r = document.createRange(); r.selectNode($("codigo")); getSelection().removeAllRanges(); getSelection().addRange(r); document.execCommand("copy"); }
+        $("copiado").classList.remove("d-none");
+        setTimeout(() => $("copiado").classList.add("d-none"), 2000);
+      });
+    });
+  </script>
+</body>
+</html>
